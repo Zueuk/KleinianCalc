@@ -1,2 +1,2 @@
-# Kleinian
-Finding parameters to generate Kleinian group based patterns using IFS fractal rendering software
+# KleinianCalc
+Finding parameters to generate Kleinian group limit sets using IFS fractal rendering software
