@@ -138,13 +138,14 @@ std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) {
 
 	polynomial P = M.a + M.d - offsetN<real_t>(nN);
 
-	// We are looking for roots closest to (2 + 0i)
+	// We are looking for roots closest to (2 + 0i),
+	// a small imaginary value is added to improve root finding
 	std::vector<complex> roots;
 	if (method == 0) {
-		roots = findRoots_Newton(P, complex(2.0, 0.0), findAllRoots);
+		roots = findRoots_Newton(P, complex(2.0, 0.1), findAllRoots);
 	}
 	else {
-		roots = findRoots_SkowronGould(P, complex(2.0, 0.0), findAllRoots);
+		roots = findRoots_SkowronGould(P, complex(2.0, 0.1), findAllRoots);
 	}
 
 	for (auto& root : roots) {

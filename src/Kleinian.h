@@ -21,11 +21,11 @@ class Kleinian
 	std::vector<complex> findRoots_Newton(polynomial& P, complex guess, bool findAllRoots);
 	std::vector<complex> findRoots_SkowronGould(polynomial& P, complex guess, bool findAllRoots);
 
+public:
 	int nA, nB;
 	int nN;
 	int nV1, nV2;
 
-public:
 	Kleinian(int na, int nb, int nn, int nv1, int nv2)
 		: nA(na), nB(nb)
 		, nN(nn)

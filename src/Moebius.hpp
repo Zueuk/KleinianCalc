@@ -18,4 +18,8 @@ public:
 			c * other.b + d * other.d
 		};
 	}
+
+	Moebius inverse() const { return Moebius{ d, -b, -c, a }; }
+
+	complexT apply(complexT z) const { return (a * z + b) / (c * z + d); }
 };

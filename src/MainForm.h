@@ -13,6 +13,7 @@ class MainForm : public QWidget
 	Q_OBJECT
 
 	int nA, nB, nN;
+	QImage previewImage;
 
 public:
 	explicit MainForm(QWidget* parent = nullptr);
@@ -30,4 +31,8 @@ protected slots:
 
 	void tableRowDoubleClicked(int index);
 	void tableCellDoubleClicked(int row, int column);
+	void tableItemSelectionChanged();
+
+	void clearPreview();
+	void setPreview(QImage& image);
 };
