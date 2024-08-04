@@ -38,6 +38,8 @@ MainForm::MainForm(QWidget* parent) :
 	connect(ui.tableWidget, &QTableWidget::cellDoubleClicked, this, &MainForm::tableCellDoubleClicked);
 	connect(ui.tableWidget, &QTableWidget::itemSelectionChanged, this, &MainForm::tableItemSelectionChanged);
 
+	connect(ui.comboBoxViewMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
+
 	previewImage = QImage(renderWidth, renderHeight, QImage::Format_Grayscale8);
 
 	actionUpdateTriggered();
@@ -205,8 +207,12 @@ void MainForm::tableItemSelectionChanged() {
 				ui.spinBoxV1->value(),
 				ui.spinBoxV2->value()
 			);
-			Moebius<complex_t> camera{ 1, -1, 1, 1 }; // Halfplane to disc
-			renderer.init(K, root, camera);
+			static const Moebius<complex_t> views[] = {
+				{ 1, -1, 1, 1 }, // Halfplane to disc
+				{ 0.5, 0, 0, 1 }, // Zoom out
+			};
+			int viewIndex = qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
+			renderer.init(K, root, views[viewIndex]);
 			renderer.clear();
 			renderer.iterate(renderIterations);
 			renderer.tonemap(previewImage);

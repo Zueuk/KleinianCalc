@@ -856,7 +856,12 @@ http://zueuk.deviantart.com/</string>
           <widget class="QComboBox" name="comboBoxViewMode">
            <item>
             <property name="text">
-             <string>disc</string>
+             <string>Disc</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Halfplane</string>
             </property>
            </item>
           </widget>
