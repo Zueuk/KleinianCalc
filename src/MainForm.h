@@ -4,6 +4,11 @@
 
 #include "ui_MainForm.h"
 
+#include "Moebius.hpp"
+
+#include <complex>
+using complex = std::complex<double>;
+
 namespace Ui {
 class MainForm;
 }
@@ -14,6 +19,8 @@ class MainForm : public QWidget
 
 	int nA, nB, nN;
 	QImage previewImage;
+
+	Moebius<complex> Ma, Mb, Mc;
 
 public:
 	explicit MainForm(QWidget* parent = nullptr);
@@ -27,6 +34,9 @@ protected slots:
 
 	void valueV1buttonClicked();
 	void valueV2buttonClicked();
+
+	void copyXmlButtonClicked();
+
 	void checkBoxfindAllRootsToggled(bool checked);
 
 	void tableRowDoubleClicked(int index);
