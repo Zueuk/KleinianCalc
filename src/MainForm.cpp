@@ -20,6 +20,7 @@ MainForm::MainForm(QWidget* parent) :
 	connect(ui.actionUpdate, &QAction::triggered, this, &MainForm::actionUpdateTriggered);
 	connect(ui.actionRecalculate, &QAction::triggered, this, &MainForm::actionRecalculateTriggered);
 	ui.splitter->setSizes({400, 920});
+	ui.splitter->setStretchFactor(0, 1);
 
 	connect(ui.actionUpdate, &QAction::triggered, this, &MainForm::actionUpdateTriggered);
 	connect(ui.actionRecalculate, &QAction::triggered, this, &MainForm::actionRecalculateTriggered);
@@ -130,12 +131,19 @@ void MainForm::actionRecalculateTriggered() {
 
 	std::sort(roots.begin(), roots.end(), [](auto a, auto b){ return norm(a) >= norm(b); });
 
-	for (int i = 0; i < n; i++) {
+	for (int i = 0; i < n; ++i) {
+		// Real part must be positive for the pattern to be on the right side
 		if (roots[i].real() < 0)
 			roots[i] = -roots[i];
+		// Very small imaginary value must be just approximation error
+		if (fabs(roots[i].imag()) < 1e-10)
+			roots[i].imag(0);
+
 		auto root = std::complex<double>(roots[i]);
 		auto itemRe = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.real())));
 		auto itemIm = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.imag())));
+		itemRe->setData(Qt::UserRole, root.real());
+		itemIm->setData(Qt::UserRole, root.imag());
 		if (abs(root) < 1 || abs(root) > 2) {
 			itemRe->setForeground(Qt::darkGray);
 			itemIm->setForeground(Qt::darkGray);
@@ -144,16 +152,11 @@ void MainForm::actionRecalculateTriggered() {
 		ui.tableWidget->setItem(i, 1, itemIm);
 	}
 
-	if (roots.size() != 0) {
+	if (n != 0) {
 		ui.tableWidget->selectRow(0);
-		auto root = std::complex<double>(roots.front());
-		QString rootString = QString::number(root.real(), 'g', 8) + "\n" + QString::number(root.imag(), 'g', 8);
-		ui.label_a22->setText(rootString);
-		ui.label_A11->setText(rootString);
 	}
 	else {
-		ui.label_a22->setText("...");
-		ui.label_A11->setText("...");
+		clearPreview();
 	}
 
 	QApplication::restoreOverrideCursor();
@@ -193,14 +196,24 @@ void MainForm::valueV2buttonClicked() {
 
 void MainForm::tableItemSelectionChanged() {
 	auto selection = ui.tableWidget->selectedItems();
-	if (selection.empty())
+	if (selection.isEmpty()) {
+		ui.label_a22->setText("...");
+		ui.label_A11->setText("...");
 		return;
+	}
+
 	int row = selection.front()->row();
 	if (row >= 0) {
 		auto itemRe = ui.tableWidget->item(row, 0);
 		auto itemIm = ui.tableWidget->item(row, 1);
 		if (itemRe && itemIm) {
-			complex_t root(boost::lexical_cast<double>(itemRe->text().toStdString()), boost::lexical_cast<double>(itemIm->text().toStdString()));
+			double re = itemRe->data(Qt::UserRole).value<double>();
+			double im = itemIm->data(Qt::UserRole).value<double>();
+			QString rootString = QString::number(re, 'g', 8) + "\n" + QString::number(im, 'g', 8);
+			ui.label_a22->setText(rootString);
+			ui.label_A11->setText(rootString);
+
+			complex_t root(re, im);
 			Renderer renderer(renderWidth, renderHeight);
 			Kleinian K(
 				nA, nB, nN,
@@ -220,6 +233,7 @@ void MainForm::tableItemSelectionChanged() {
 			return;
 		}
 	}
+
 	clearPreview();
 }
 

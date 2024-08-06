@@ -6,7 +6,7 @@
 
 #include "pcg32.h"
 
-static const real_t PI = boost::math::constants::pi<real_t>();
+static const auto PI = boost::math::constants::pi<real_t>();
 
 static const long batch = 100;
 
@@ -19,36 +19,36 @@ void Renderer::clear() {
 void Renderer:: init(const Kleinian& K, const complex_t& root, const Moebius<complex_t>& camera) {
 	transforms.clear();
 
-	Moebius<complex_t> Mv1{
-		0.0, 1.0,
-		1.0, complex_t(0, offsetN<real_t>(K.nV1))
-	};
-	transforms.emplace_back(Mv1);
-	transforms.emplace_back(Mv1.inverse());
-
-	Moebius<complex_t> Mv2{
-		0.0, 1.0,
-		1.0, complex_t(0, -offsetN<real_t>(K.nV2))
-	};
-	transforms.emplace_back(Mv2);
-	transforms.emplace_back(Mv2.inverse());
-
 	Moebius<complex_t> Ma = {
 		0.0, 1.0,
 		-1.0, root
 	};
+	Moebius<complex_t> Mb = {
+		0.0, 1.0,
+		1.0, complex_t(0, offsetN<real_t>(K.nV1))
+	};
+	Moebius<complex_t> Mc = {
+		0.0, 1.0,
+		1.0, complex_t(0, -offsetN<real_t>(K.nV2))
+	};
+
 	transforms.emplace_back(Ma);
 	transforms.emplace_back(Ma.inverse());
+	transforms.emplace_back(Mb);
+	transforms.emplace_back(Mb.inverse());
+	transforms.emplace_back(Mc);
+	transforms.emplace_back(Mc.inverse());
 
 	cameraTransform = camera;
 }
 
 void Renderer::iterate(long iters) {
 	pcg32 rng(std::chrono::system_clock::now().time_since_epoch().count());
+	const auto bound = (uint32_t)transforms.size();
 
-	real_t camScale = std::min(width, height) / (real_t)2;
-	real_t camX = width/2;
-	real_t camY = height/2;
+	real_t camScale = std::min(width, height) / 2.f;
+	real_t camX = width / 2.f;
+	real_t camY = height / 2.f;
 
 	for (long i = 0; i < iters; i += batch) {
 		// point on circle -> vertical line
@@ -56,17 +56,16 @@ void Renderer::iterate(long iters) {
 		complex_t z(0, std::tan(a));
 
 		for (long j = 0; j < batch; ++j) {
-			int n = rng.nextUInt() % transforms.size();
-			const auto& M = transforms[n];
-			z = M.apply(z);
+			auto n = rng.nextUInt(bound);
+			z = transforms[n].apply(z);
 
 			complex_t zc = cameraTransform.apply(z);
 
-			int x = int(zc.real() * camScale + camX);
-			int y = int(zc.imag() * camScale + camY);
+			auto x = long(zc.real() * camScale + camX);
+			auto y = long(zc.imag() * camScale + camY);
 
 			if (x >= 0 && x < width && y >= 0 && y < height) {
-				histogram[y * width + x] += real_t(1);
+				histogram[y * width + x] += 1;
 			}
 		}
 		itersCounter += batch;
@@ -74,8 +73,8 @@ void Renderer::iterate(long iters) {
 }
 
 void Renderer::tonemap(QImage& image) {
-	real_t k1 = 256 * log1p(1) / log1p(1 / 4.0);
-	real_t k2 = real_t(width * height) / (4.0 * itersCounter);
+	real_t k1 = 256 * log1p(1.f) / log1p(1 / 4.f);
+	real_t k2 = real_t(width * height) / (4.f * itersCounter);
 
 	for (long y = 0; y < height; ++y) {
 		auto line = image.scanLine(y);

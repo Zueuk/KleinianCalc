@@ -13,7 +13,7 @@ using complex_t = std::complex<real_t>;
 
 class Renderer
 {
-	int width, height;
+	long width, height;
 
 	std::unique_ptr<float[]> histogram;
 
@@ -23,7 +23,7 @@ class Renderer
 	long itersCounter;
 
 public:
-	Renderer(int w, int h)
+	Renderer(long w, long h)
 		: width(w)
 		, height(h)
 		, histogram(new float[w * h])

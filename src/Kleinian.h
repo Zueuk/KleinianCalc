@@ -13,7 +13,7 @@ class Kleinian
 {
 	// Using boost::multiprecision to solve higher order polynomials
 	using complex = boost::multiprecision::cpp_complex_oct;
-	using real_t = complex::value_type;
+	using real = complex::value_type;
 
 	// Using boost::polynomial class for convenience
 	using polynomial = boost::math::tools::polynomial<complex>;
