@@ -32,6 +32,8 @@ MainForm::MainForm(QWidget* parent) :
 
 	connect(ui.checkBoxFindAllRoots, &QAbstractButton::toggled, this, &MainForm::checkBoxfindAllRootsToggled);
 
+	connect(ui.buttonCopyXml, &QAbstractButton::clicked, this, &MainForm::copyXmlButtonClicked);
+
 	ui.tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	ui.tableWidget->horizontalHeader()->setSectionsClickable(false);
 	ui.tableWidget->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -42,6 +44,10 @@ MainForm::MainForm(QWidget* parent) :
 	connect(ui.comboBoxViewMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
 
 	previewImage = QImage(renderWidth, renderHeight, QImage::Format_Grayscale8);
+
+	Ma = { 0, 1, -1, 0 };
+	Mb = { 0, 1, 1, 0 };
+	Mc = { 0, 1, 1, 0 };
 
 	actionUpdateTriggered();
 }
@@ -88,6 +94,8 @@ void MainForm::actionUpdateTriggered() {
 
 	double v1 = offsetN<double>(nV1);
 	double v2 = offsetN<double>(nV2);
+	Mb.d.imag(v1);
+	Mc.d.imag(-v2);
 	QString v1string = QString::number(v1, 'g', 8);
 	QString v2string = QString::number(v2, 'g', 8);
 	ui.valueV1button->setText(v1string);
@@ -139,7 +147,7 @@ void MainForm::actionRecalculateTriggered() {
 		if (fabs(roots[i].imag()) < 1e-10)
 			roots[i].imag(0);
 
-		auto root = std::complex<double>(roots[i]);
+		auto root = complex(roots[i]);
 		auto itemRe = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.real())));
 		auto itemIm = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.imag())));
 		itemRe->setData(Qt::UserRole, root.real());
@@ -154,12 +162,58 @@ void MainForm::actionRecalculateTriggered() {
 
 	if (n != 0) {
 		ui.tableWidget->selectRow(0);
+		ui.buttonCopyXml->setEnabled(true);
 	}
 	else {
 		clearPreview();
+		ui.buttonCopyXml->setEnabled(false);
 	}
 
 	QApplication::restoreOverrideCursor();
+}
+
+static QString toParamString(const QString& name, const complex& z) {
+	return "Re_" + name + "=\"" + QString::number(z.real(), 'g', 16) + "\" "
+		"Im_" + name + "=\"" + QString::number(z.imag(), 'g', 16) + "\" ";
+}
+
+static QString toXformString(const Moebius<complex>& M) {
+	return "<xform weight=\"1\" color=\"0\" mobius=\"1\" coefs=\"1 0 0 1 0 0\" " +
+		toParamString("A", M.a) +
+		toParamString("B", M.b) +
+		toParamString("C", M.c) +
+		toParamString("D", M.d) +
+		"/>\n";
+}
+
+void MainForm::copyXmlButtonClicked() {
+	QString viewScale, viewXform;
+	if (ui.comboBoxViewMode->currentIndex() == 0) {
+		viewScale = "512";
+		viewXform = "<finalxform color=\"0\" symmetry=\"1\" mobius=\"1\" coefs=\"1 0 0 1 0 0\""
+					" Re_A=\"1\" Im_A=\"0\" Re_B=\"-1\" Im_B=\"0\" Re_C=\"1\" Im_C=\"0\" Re_D=\"1\" Im_D=\"0\"/>\n";
+	} else {
+		viewScale = "256";
+		viewXform = "";
+	}
+
+	QApplication::clipboard()->setText(
+		"<flame name=\"Kleinian\""
+		" size=\"1024 1024\" center=\"0 0\" scale=\"" + viewScale + "\""
+		" oversample=\"1\" filter=\"0.5\" quality=\"50\""
+		" background=\"0 0 0\" brightness=\"4\" gamma=\"4\" gamma_threshold=\"0.04\">\n" +
+			toXformString(Ma) +
+			toXformString(Ma.inverse()) +
+			toXformString(Mb) +
+			toXformString(Mb.inverse()) +
+			toXformString(Mc) +
+			toXformString(Mc.inverse()) +
+			viewXform +
+			"<palette count=\"1\" format=\"RGB\">"
+				"FFFFFF"
+			"</palette>\n"
+		"</flame>"
+	);
 }
 
 void MainForm::checkBoxfindAllRootsToggled(bool checked) {
@@ -209,6 +263,7 @@ void MainForm::tableItemSelectionChanged() {
 		if (itemRe && itemIm) {
 			double re = itemRe->data(Qt::UserRole).value<double>();
 			double im = itemIm->data(Qt::UserRole).value<double>();
+			Ma.d = complex(re, im);
 			QString rootString = QString::number(re, 'g', 8) + "\n" + QString::number(im, 'g', 8);
 			ui.label_a22->setText(rootString);
 			ui.label_A11->setText(rootString);
