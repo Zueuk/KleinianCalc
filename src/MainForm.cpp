@@ -6,7 +6,6 @@
 #include "Render.h"
 
 #include <boost/lexical_cast.hpp>
-#include <numeric>
 
 const int renderWidth = 920;
 const int renderHeight = 920;
@@ -25,8 +24,8 @@ MainForm::MainForm(QWidget* parent) :
 	connect(ui.actionUpdate, &QAction::triggered, this, &MainForm::actionUpdateTriggered);
 	connect(ui.actionRecalculate, &QAction::triggered, this, &MainForm::actionRecalculateTriggered);
 
-	connect(ui.valueV1button, &QPushButton::clicked, this, &MainForm::valueV1buttonClicked);
-	connect(ui.valueV2button, &QPushButton::clicked, this, &MainForm::valueV2buttonClicked);
+	ui.spinBoxU->hide();
+	connect(ui.valueUbutton, &QPushButton::clicked, this, &MainForm::valueUbuttonClicked);
 	connect(ui.valueV1button, &QPushButton::clicked, this, &MainForm::valueV1buttonClicked);
 	connect(ui.valueV2button, &QPushButton::clicked, this, &MainForm::valueV2buttonClicked);
 
@@ -65,8 +64,20 @@ void MainForm::actionUpdateTriggered() {
 		nN *= d;
 	}
 
-	int nV1 = ui.spinBoxV1->value();
-	int nV2 = ui.spinBoxV2->value();
+	auto updateValueAndUi = [](int* value, QSpinBox* spinBox, QLabel* infLabel, bool infChecked) {
+		if (infChecked) {
+			*value = INT32_MAX;
+			spinBox->hide();
+			infLabel->show();
+		}
+		else {
+			*value = spinBox->value();
+			infLabel->hide();
+			spinBox->show();
+		}
+	};
+	updateValueAndUi(&nV1, ui.spinBoxV1, ui.labelInfV1, ui.checkBoxInfV1->isChecked());
+	updateValueAndUi(&nV2, ui.spinBoxV2, ui.labelInfV2, ui.checkBoxInfV2->isChecked());
 
 	bool warnB = false;
 	if (nV1 != nV2 && nV1 != 2 && nV2 != 2) {
@@ -125,8 +136,7 @@ void MainForm::actionRecalculateTriggered() {
 
 	Kleinian K(
 		nA, nB, nN,
-		ui.spinBoxV1->value(),
-		ui.spinBoxV2->value()
+		nV1, nV2
 	);
 
 	int method = ui.radioBtnMethod0->isChecked() ? 0 : 1;
@@ -238,13 +248,18 @@ void MainForm::tableCellDoubleClicked(int row, int column) {
 	}
 }
 
+void MainForm::valueUbuttonClicked() {
+	double u = 2.0;
+	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(u)));
+}
+
 void MainForm::valueV1buttonClicked() {
-	double v1 = offsetN<double>(ui.spinBoxV1->value());
+	double v1 = offsetN<double>(nV1);
 	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v1)));
 }
 
 void MainForm::valueV2buttonClicked() {
-	double v2 = offsetN<double>(ui.spinBoxV2->value());
+	double v2 = offsetN<double>(nV2);
 	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v2)));
 }
 
@@ -272,8 +287,7 @@ void MainForm::tableItemSelectionChanged() {
 			Renderer renderer(renderWidth, renderHeight);
 			Kleinian K(
 				nA, nB, nN,
-				ui.spinBoxV1->value(),
-				ui.spinBoxV2->value()
+				nV1, nV2
 			);
 			static const Moebius<complex_t> views[] = {
 				{ 1, -1, 1, 1 }, // Halfplane to disc

@@ -74,7 +74,7 @@
          <item row="1" column="1">
           <widget class="QSpinBox" name="spinBoxA">
            <property name="maximum">
-            <number>1000000</number>
+            <number>1000</number>
            </property>
            <property name="value">
             <number>1</number>
@@ -104,7 +104,7 @@
          <item row="2" column="1">
           <widget class="QSpinBox" name="spinBoxB">
            <property name="maximum">
-            <number>1000000</number>
+            <number>1000</number>
            </property>
           </widget>
          </item>
@@ -188,28 +188,58 @@
           </widget>
          </item>
          <item row="5" column="1">
-          <widget class="QLineEdit" name="lineEdit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>infinity</string>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,0">
+           <item>
+            <widget class="QSpinBox" name="spinBoxU">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimum">
+              <number>2</number>
+             </property>
+             <property name="maximum">
+              <number>99999</number>
+             </property>
+             <property name="value">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="labelInfU">
+             <property name="frameShape">
+              <enum>QFrame::Shape::Box</enum>
+             </property>
+             <property name="text">
+              <string>infinity</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxInfU">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>inf</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item row="5" column="2">
-          <widget class="QLabel" name="labelMvalue">
+          <widget class="QPushButton" name="valueUbutton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Copy to clipboard</string>
+           </property>
            <property name="text">
             <string>2</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -224,17 +254,38 @@
           </widget>
          </item>
          <item row="6" column="1">
-          <widget class="QSpinBox" name="spinBoxV1">
-           <property name="minimum">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-           <property name="value">
-            <number>3</number>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,0">
+           <item>
+            <widget class="QSpinBox" name="spinBoxV1">
+             <property name="minimum">
+              <number>2</number>
+             </property>
+             <property name="maximum">
+              <number>999999999</number>
+             </property>
+             <property name="value">
+              <number>3</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="labelInfV1">
+             <property name="frameShape">
+              <enum>QFrame::Shape::Box</enum>
+             </property>
+             <property name="text">
+              <string>infinity</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxInfV1">
+             <property name="text">
+              <string>inf</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item row="6" column="2">
           <widget class="QPushButton" name="valueV1button">
@@ -257,17 +308,38 @@
           </widget>
          </item>
          <item row="7" column="1">
-          <widget class="QSpinBox" name="spinBoxV2">
-           <property name="minimum">
-            <number>2</number>
-           </property>
-           <property name="maximum">
-            <number>999999999</number>
-           </property>
-           <property name="value">
-            <number>2</number>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1,0">
+           <item>
+            <widget class="QSpinBox" name="spinBoxV2">
+             <property name="minimum">
+              <number>2</number>
+             </property>
+             <property name="maximum">
+              <number>999999999</number>
+             </property>
+             <property name="value">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="labelInfV2">
+             <property name="frameShape">
+              <enum>QFrame::Shape::Box</enum>
+             </property>
+             <property name="text">
+              <string>infinity</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxInfV2">
+             <property name="text">
+              <string>inf</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item row="7" column="2">
           <widget class="QPushButton" name="valueV2button">
@@ -326,7 +398,7 @@
          <item row="13" column="1">
           <widget class="QLabel" name="labelAbout">
            <property name="text">
-            <string>Kleinian Calculator v0.9.1
+            <string>Kleinian Calculator v0.9.2
 
 by Peter Sdobnov
 
@@ -902,8 +974,12 @@ http://zueuk.deviantart.com/</string>
   <tabstop>spinBoxA</tabstop>
   <tabstop>spinBoxB</tabstop>
   <tabstop>spinBoxN</tabstop>
+  <tabstop>spinBoxU</tabstop>
   <tabstop>spinBoxV1</tabstop>
   <tabstop>spinBoxV2</tabstop>
+  <tabstop>checkBoxInfU</tabstop>
+  <tabstop>checkBoxInfV1</tabstop>
+  <tabstop>checkBoxInfV2</tabstop>
   <tabstop>radioBtnMethod0</tabstop>
   <tabstop>radioBtnMethod1</tabstop>
   <tabstop>buttonRecalc</tabstop>
@@ -976,6 +1052,22 @@ http://zueuk.deviantart.com/</string>
    </hints>
   </connection>
   <connection>
+   <sender>spinBoxU</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>actionUpdate</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>364</x>
+     <y>183</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>spinBoxN</sender>
    <signal>valueChanged(int)</signal>
    <receiver>actionUpdate</receiver>
@@ -1032,6 +1124,54 @@ http://zueuk.deviantart.com/</string>
     <hint type="sourcelabel">
      <x>169</x>
      <y>287</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxInfU</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionUpdate</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>580</x>
+     <y>183</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxInfV1</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionUpdate</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>580</x>
+     <y>183</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxInfV2</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionUpdate</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>580</x>
+     <y>183</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

@@ -18,6 +18,7 @@ class MainForm : public QWidget
 	Q_OBJECT
 
 	int nA, nB, nN;
+	int nV1, nV2;
 	QImage previewImage;
 
 	Moebius<complex> Ma, Mb, Mc;
@@ -32,6 +33,7 @@ protected slots:
 	void actionUpdateTriggered();
 	void actionRecalculateTriggered();
 
+	void valueUbuttonClicked();
 	void valueV1buttonClicked();
 	void valueV2buttonClicked();
 
