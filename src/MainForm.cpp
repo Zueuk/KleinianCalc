@@ -22,8 +22,7 @@ MainForm::MainForm(QWidget* parent)
 	connect(ui.actionUpdate, &QAction::triggered, this, &MainForm::actionUpdateTriggered);
 	connect(ui.actionRecalculate, &QAction::triggered, this, &MainForm::actionRecalculateTriggered);
 
-	ui.spinBoxU->hide();
-	connect(ui.valueUbutton, &QPushButton::clicked, this, &MainForm::valueUbuttonClicked);
+	connect(ui.valueHbutton, &QPushButton::clicked, this, &MainForm::valueHbuttonClicked);
 	connect(ui.valueV1button, &QPushButton::clicked, this, &MainForm::valueV1buttonClicked);
 	connect(ui.valueV2button, &QPushButton::clicked, this, &MainForm::valueV2buttonClicked);
 
@@ -61,8 +60,8 @@ void MainForm::actionUpdateTriggered() {
 		K.n *= d;
 	}
 
-	auto updateValueAndUi = [](int* value, QSpinBox* spinBox, QLabel* infLabel, bool infChecked) {
-		if (infChecked) {
+	auto updateValueAndUi = [](int* value, QSpinBox* spinBox, QLabel* infLabel, const QCheckBox* checkBox) {
+		if (checkBox->isChecked()) {
 			*value = INT_MAX;
 			spinBox->hide();
 			infLabel->show();
@@ -73,8 +72,9 @@ void MainForm::actionUpdateTriggered() {
 			spinBox->show();
 		}
 	};
-	updateValueAndUi(&K.v1, ui.spinBoxV1, ui.labelInfV1, ui.checkBoxInfV1->isChecked());
-	updateValueAndUi(&K.v2, ui.spinBoxV2, ui.labelInfV2, ui.checkBoxInfV2->isChecked());
+	updateValueAndUi(&K.h, ui.spinBoxH, ui.labelInfH, ui.checkBoxInfH);
+	updateValueAndUi(&K.v1, ui.spinBoxV1, ui.labelInfV1, ui.checkBoxInfV1);
+	updateValueAndUi(&K.v2, ui.spinBoxV2, ui.labelInfV2, ui.checkBoxInfV2);
 
 	bool warnB = false;
 	if (K.v1 != K.v2 && K.v1 > 2 && K.v2 > 2) {
@@ -100,20 +100,20 @@ void MainForm::actionUpdateTriggered() {
 	// GCD(a,b)*n should be > 1
 	ui.labelNvalue->setStyleSheet(K.n > 1 ? "" : "background-color: red");
 
-	double v1 = offsetN<double>(K.v1);
-	double v2 = offsetN<double>(K.v2);
-	Mb.d.imag(v1);
-	Mc.d.imag(-v2);
-	QString v1string = QString::number(v1, 'g', 8);
-	QString v2string = QString::number(v2, 'g', 8);
-	ui.valueV1button->setText(v1string);
-	ui.valueV2button->setText(v2string);
-
-	ui.label_b22->setText("0\n" + v1string);
-	ui.label_B11->setText("0\n" + v1string);
-
-	ui.label_c22->setText("0\n-" + v2string);
-	ui.label_C11->setText("0\n-" + v2string);
+	if (isInf(K.h)) {
+		offsetH = offsetN<double>(K.h);
+		offsetV1 = offsetN<double>(K.v1);
+		offsetV2 = offsetN<double>(K.v2);
+	}
+	else {
+		TilngParameters<double> tiling(K.h, K.v1, K.v2);
+		offsetH= tiling.ph;
+		offsetV1 = tiling.qh;
+		offsetV2 = tiling.rh;
+	}
+	ui.valueHbutton->setText(QString::number(offsetH, 'g', 8));
+	ui.valueV1button->setText(QString::number(offsetV1, 'g', 8));
+	ui.valueV2button->setText(QString::number(offsetV2, 'g', 8));
 
 	if (K.a + K.b < 42) {
 		// If the polynomial is not too big, solve it right away
@@ -121,7 +121,7 @@ void MainForm::actionUpdateTriggered() {
 		actionRecalculateTriggered();
 	}
 	else {
-		// Otherwise, let the user press "Solve" when ready
+		// Otherwise, let the user click "Solve" when ready
 		ui.tableWidget->setRowCount(0);
 		ui.buttonRecalc->show();
 	}
@@ -136,29 +136,24 @@ void MainForm::actionRecalculateTriggered() {
 	auto roots = K.solve(method, findAllRoots);
 
 	int n = (int)roots.size();
-	ui.tableWidget->clearSelection();
-	ui.tableWidget->setRowCount(n);
 
-	std::sort(roots.begin(), roots.end(), [](const auto& a, const auto& b){ return norm(a) > norm(b); });
+	ui.tableWidget->clearContents();
+	ui.tableWidget->setRowCount(n);
 
 	for (int i = 0; i < n; ++i) {
 		auto root = complex(roots[i]);
-
-		// Real part must be positive for the pattern to be on the right side
-		if (root.real() < 0)
-			root.real(-root.real());
-		// Very small imaginary value must be just approximation error
-		if (abs(root.imag()) < FLT_EPSILON)
-			root.imag(0);
-
+		if (isInf(K.h)) {
+			// Real part must be positive for the pattern to be on the right side
+			if (root.real() < 0)
+				root.real(-root.real());
+			// Very small imaginary value must be just approximation error
+			if (abs(root.imag()) < FLT_EPSILON)
+				root.imag(0);
+		}
 		auto itemRe = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.real())));
 		auto itemIm = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.imag())));
 		itemRe->setData(Qt::UserRole, root.real());
 		itemIm->setData(Qt::UserRole, root.imag());
-		if (abs(root) < 1 || abs(root) > 2) {
-			itemRe->setForeground(Qt::darkGray);
-			itemIm->setForeground(Qt::darkGray);
-		}
 		ui.tableWidget->setItem(i, 0, itemRe);
 		ui.tableWidget->setItem(i, 1, itemIm);
 	}
@@ -247,26 +242,33 @@ void MainForm::tableCellDoubleClicked(int row, int column) {
 	}
 }
 
-void MainForm::valueUbuttonClicked() {
-	double u = 2.0;
-	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(u)));
+void MainForm::valueHbuttonClicked() {
+	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(offsetH)));
 }
 
 void MainForm::valueV1buttonClicked() {
-	double v1 = offsetN<double>(K.v1);
-	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v1)));
+	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(offsetV1)));
 }
 
 void MainForm::valueV2buttonClicked() {
-	double v2 = offsetN<double>(K.v2);
-	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v2)));
+	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(offsetV2)));
+}
+
+static void displayMatrix(const Moebius<complex>& M, QLabel* la, QLabel* lb, QLabel* lc, QLabel* ld) {
+	auto toString = [](complex z){
+		return (z.imag() != 0)
+			? QString::number(z.real(), 'g', 8) + "\n" + QString::number(z.imag(), 'g', 8)
+			: QString::number(z.real(), 'g', 8);
+	};
+	la->setText(toString(M.a));
+	lb->setText(toString(M.b));
+	lc->setText(toString(M.c));
+	ld->setText(toString(M.d));
 }
 
 void MainForm::tableItemSelectionChanged() {
 	auto selection = ui.tableWidget->selectedItems();
 	if (selection.isEmpty()) {
-		ui.label_a22->setText("...");
-		ui.label_A11->setText("...");
 		return;
 	}
 
@@ -277,10 +279,18 @@ void MainForm::tableItemSelectionChanged() {
 		if (itemRe && itemIm) {
 			double re = itemRe->data(Qt::UserRole).value<double>();
 			double im = itemIm->data(Qt::UserRole).value<double>();
-			Ma.d = complex(re, im);
-			QString rootString = QString::number(re, 'g', 8) + "\n" + QString::number(im, 'g', 8);
-			ui.label_a22->setText(rootString);
-			ui.label_A11->setText(rootString);
+
+			auto transforms = K.createGenerators(complex(re, im));
+			Ma = transforms[0];
+			Mb = transforms[1];
+			Mc = transforms[2];
+
+			displayMatrix(Ma, ui.label_a11, ui.label_a12, ui.label_a21, ui.label_a22);
+			displayMatrix(Mb, ui.label_b11, ui.label_b12, ui.label_b21, ui.label_b22);
+			displayMatrix(Mc, ui.label_c11, ui.label_c12, ui.label_c21, ui.label_c22);
+			displayMatrix(Ma.inverse(), ui.label_A11, ui.label_A12, ui.label_A21, ui.label_A22);
+			displayMatrix(Mb.inverse(), ui.label_B11, ui.label_B12, ui.label_B21, ui.label_B22);
+			displayMatrix(Mc.inverse(), ui.label_C11, ui.label_C12, ui.label_C21, ui.label_C22);
 
 			renderPreview(re, im);
 			return;
@@ -297,20 +307,7 @@ void MainForm::clearPreview() {
 }
 
 void MainForm::renderPreview(double re, double im) {
-	std::vector<Moebius<Renderer::complex>> transforms = {
-		{
-			0, 1,
-			-1.0, Renderer::complex(re, im)
-		},
-		{
-			0, 1,
-			1, Renderer::complex(0, offsetN<float>(K.v1))
-		},
-		{
-			0, 1,
-			1, Renderer::complex(0, -offsetN<float>(K.v2))
-		}
-	};
+	auto transforms = K.createGenerators(Renderer::complex(re, im));
 	int n = (int)transforms.size();
 	transforms.reserve(n * 2);
 	for (int i = 0; i < n; ++i) {

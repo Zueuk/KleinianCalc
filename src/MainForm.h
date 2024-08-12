@@ -5,7 +5,6 @@
 #include "ui_MainForm.h"
 
 #include "Kleinian.h"
-#include "Moebius.hpp"
 #include "Render.h"
 
 #include <complex>
@@ -25,6 +24,7 @@ class MainForm : public QWidget
 	QImage previewImage;
 
 	Moebius<complex> Ma, Mb, Mc;
+	double offsetH, offsetV1, offsetV2;
 
 public:
 	explicit MainForm(QWidget* parent = nullptr);
@@ -36,7 +36,7 @@ protected slots:
 	void actionUpdateTriggered();
 	void actionRecalculateTriggered();
 
-	void valueUbuttonClicked();
+	void valueHbuttonClicked();
 	void valueV1buttonClicked();
 	void valueV2buttonClicked();
 
