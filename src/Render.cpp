@@ -6,9 +6,9 @@
 
 #include "pcg32.h"
 
-static const auto PI = boost::math::constants::pi<real_t>();
+static const auto PI = boost::math::constants::pi<Renderer::real>();
 
-static const long batch = 100;
+static const long batch = 1000;
 
 void Renderer::clear() {
 	for (long i = 0; i < width * height; ++i)
@@ -16,20 +16,20 @@ void Renderer::clear() {
 	itersCounter = 0;
 }
 
-void Renderer:: init(const Kleinian& K, const complex_t& root, const Moebius<complex_t>& camera) {
+void Renderer:: init(const Kleinian& K, const complex& root, const Moebius<complex>& camera) {
 	transforms.clear();
 
-	Moebius<complex_t> Ma = {
+	Moebius<complex> Ma = {
 		0.0, 1.0,
 		-1.0, root
 	};
-	Moebius<complex_t> Mb = {
+	Moebius<complex> Mb = {
 		0.0, 1.0,
-		1.0, complex_t(0, offsetN<real_t>(K.nV1))
+		1.0, complex(0, offsetN<real>(K.nV1))
 	};
-	Moebius<complex_t> Mc = {
+	Moebius<complex> Mc = {
 		0.0, 1.0,
-		1.0, complex_t(0, -offsetN<real_t>(K.nV2))
+		1.0, complex(0, -offsetN<real>(K.nV2))
 	};
 
 	transforms.emplace_back(Ma);
@@ -46,20 +46,20 @@ void Renderer::iterate(long iters) {
 	pcg32 rng(std::chrono::system_clock::now().time_since_epoch().count());
 	const auto bound = (uint32_t)transforms.size();
 
-	real_t camScale = std::min(width, height) / 2.f;
-	real_t camX = width / 2.f;
-	real_t camY = height / 2.f;
+	real camScale = std::min(width, height) / 2.f;
+	real camX = width / 2.f;
+	real camY = height / 2.f;
 
 	for (long i = 0; i < iters; i += batch) {
 		// point on circle -> vertical line
-		real_t a = rng.nextFloat() * 2*PI;
-		complex_t z(0, std::tan(a));
+		real a = rng.nextFloat() * 2*PI;
+		complex z(0, std::tan(a));
 
 		for (long j = 0; j < batch; ++j) {
 			auto n = rng.nextUInt(bound);
 			z = transforms[n].apply(z);
 
-			complex_t zc = cameraTransform.apply(z);
+			complex zc = cameraTransform.apply(z);
 
 			auto x = long(zc.real() * camScale + camX);
 			auto y = long(zc.imag() * camScale + camY);
@@ -73,8 +73,8 @@ void Renderer::iterate(long iters) {
 }
 
 void Renderer::tonemap(QImage& image) {
-	real_t k1 = 256 * log1p(1.f) / log1p(1 / 4.f);
-	real_t k2 = real_t(width * height) / (4.f * itersCounter);
+	float k1 = 256 * log1p(1.f) / log1p(1 / 4.f);
+	float k2 = float(width * height) / (4.f * itersCounter);
 
 	for (long y = 0; y < height; ++y) {
 		auto line = image.scanLine(y);

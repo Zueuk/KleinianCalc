@@ -26,7 +26,7 @@ void solve_quadratic(const std::vector<complexT>& poly, complexT& out_x0, comple
 	const complexT& b = poly[1];
 	const complexT& c = poly[0];
 
-	complexT sqrtD = sqrt(b*b - 4 * a*c);
+	complexT sqrtD = sqrt(b*b - 4.0 * a*c);
 
 	if (real(conj(b) * sqrtD) >= 0)
 		out_x0 = -0.5 * (b + sqrtD);
@@ -581,7 +581,7 @@ void solve_1_laguerre(const std::vector<complexT>& poly, complexT& root) {
 				denom = one_nth - n_1_nth * denom_sqrt;
 		}
 
-		complexT dx = (denom != 0) ? // avoid division by zero
+		complexT dx = (denom != 0.0) ? // avoid division by zero
 			fac_newton / denom :
 			(absroot + 1.0) * (complexT)Complex_Jumps[i % Frac_Jumps_Count]; // make a 'random' jump
 

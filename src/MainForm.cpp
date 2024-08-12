@@ -283,13 +283,13 @@ void MainForm::tableItemSelectionChanged() {
 			ui.label_a22->setText(rootString);
 			ui.label_A11->setText(rootString);
 
-			complex_t root(re, im);
+			Renderer::complex root(re, im);
 			Renderer renderer(renderWidth, renderHeight);
 			Kleinian K(
 				nA, nB, nN,
 				nV1, nV2
 			);
-			static const Moebius<complex_t> views[] = {
+			static const Moebius<Renderer::complex> views[] = {
 				{ 1, -1, 1, 1 }, // Halfplane to disc
 				{ 0.5, 0, 0, 1 }, // Zoom out
 			};
