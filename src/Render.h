@@ -1,10 +1,9 @@
 #pragma once
 
+#include <complex>
 #include <memory>
 #include <vector>
-#include <complex>
 
-#include "Kleinian.h"
 #include "Moebius.hpp"
 
 #include <QImage>
@@ -19,10 +18,6 @@ private:
 	long width, height;
 
 	std::unique_ptr<float[]> histogram;
-
-	std::vector<Moebius<complex>> transforms;
-	Moebius<complex> cameraTransform;
-
 	long itersCounter;
 
 public:
@@ -33,7 +28,6 @@ public:
 	{ }
 
 	void clear();
-	void init(const Kleinian& K, const complex& root, const Moebius<complex>& camera);
-	void iterate(long iters);
+	void iterate(long iters, const std::vector<Moebius<complex>>& transforms, const Moebius<complex>& cameraTransform);
 	void tonemap(QImage& image);
 };

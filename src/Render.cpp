@@ -16,33 +16,7 @@ void Renderer::clear() {
 	itersCounter = 0;
 }
 
-void Renderer:: init(const Kleinian& K, const complex& root, const Moebius<complex>& camera) {
-	transforms.clear();
-
-	Moebius<complex> Ma = {
-		0.0, 1.0,
-		-1.0, root
-	};
-	Moebius<complex> Mb = {
-		0.0, 1.0,
-		1.0, complex(0, offsetN<real>(K.v1))
-	};
-	Moebius<complex> Mc = {
-		0.0, 1.0,
-		1.0, complex(0, -offsetN<real>(K.v2))
-	};
-
-	transforms.emplace_back(Ma);
-	transforms.emplace_back(Ma.inverse());
-	transforms.emplace_back(Mb);
-	transforms.emplace_back(Mb.inverse());
-	transforms.emplace_back(Mc);
-	transforms.emplace_back(Mc.inverse());
-
-	cameraTransform = camera;
-}
-
-void Renderer::iterate(long iters) {
+void Renderer:: iterate(long iters, const std::vector<Moebius<complex>>& transforms, const Moebius<complex>& cameraTransform) {
 	pcg32 rng(std::chrono::system_clock::now().time_since_epoch().count());
 	const auto bound = (uint32_t)transforms.size();
 

@@ -3,16 +3,16 @@
 #include <QApplication>
 #include <QClipboard>
 
-#include "Render.h"
-
 #include <boost/lexical_cast.hpp>
 
 const int renderWidth = 920;
 const int renderHeight = 920;
 const int renderIterations = 999000;
 
-MainForm::MainForm(QWidget* parent) :
-	QWidget(parent)
+MainForm::MainForm(QWidget* parent)
+	: QWidget(parent)
+	, renderer(renderWidth, renderHeight)
+	, previewImage(renderWidth, renderHeight, QImage::Format_Grayscale8)
 {
 	ui.setupUi(this);
 
@@ -39,8 +39,6 @@ MainForm::MainForm(QWidget* parent) :
 	connect(ui.tableWidget, &QTableWidget::itemSelectionChanged, this, &MainForm::tableItemSelectionChanged);
 
 	connect(ui.comboBoxViewMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
-
-	previewImage = QImage(renderWidth, renderHeight, QImage::Format_Grayscale8);
 
 	Ma = { 0, 1, -1, 0 };
 	Mb = { 0, 1, 1, 0 };
@@ -276,18 +274,7 @@ void MainForm::tableItemSelectionChanged() {
 			ui.label_a22->setText(rootString);
 			ui.label_A11->setText(rootString);
 
-			Renderer::complex root(re, im);
-			Renderer renderer(renderWidth, renderHeight);
-			static const Moebius<Renderer::complex> views[] = {
-				{ 1, -1, 1, 1 }, // Halfplane to disc
-				{ 0.5, 0, 0, 1 }, // Zoom out
-			};
-			int viewIndex = qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
-			renderer.init(K, root, views[viewIndex]);
-			renderer.clear();
-			renderer.iterate(renderIterations);
-			renderer.tonemap(previewImage);
-			ui.labelPreview->setPixmap(QPixmap::fromImage(previewImage));
+			renderPreview(re, im);
 			return;
 		}
 	}
@@ -301,6 +288,35 @@ void MainForm::clearPreview() {
 	ui.labelPreview->setPixmap(pixmap);
 }
 
-void MainForm::setPreview(QImage& image) {
-	ui.labelPreview->setPixmap(QPixmap::fromImage(image));
+void MainForm::renderPreview(double re, double im) {
+	std::vector<Moebius<Renderer::complex>> transforms = {
+		{
+			0, 1,
+			-1.0, Renderer::complex(re, im)
+		},
+		{
+			0, 1,
+			1, Renderer::complex(0, offsetN<float>(K.v1))
+		},
+		{
+			0, 1,
+			1, Renderer::complex(0, -offsetN<float>(K.v2))
+		}
+	};
+	int n = (int)transforms.size();
+	transforms.reserve(n * 2);
+	for (int i = 0; i < n; ++i) {
+		transforms.push_back(transforms[i].inverse());
+	}
+
+	static const Moebius<Renderer::complex> views[] = {
+		{ 1, -1, 1, 1 }, // Halfplane to disc
+		{ 0.5, 0, 0, 1 }, // Zoom out
+	};
+	int viewIndex = qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
+
+	renderer.clear();
+	renderer.iterate(renderIterations, transforms, views[viewIndex]);
+	renderer.tonemap(previewImage);
+	ui.labelPreview->setPixmap(QPixmap::fromImage(previewImage));
 }

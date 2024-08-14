@@ -6,6 +6,7 @@
 
 #include "Kleinian.h"
 #include "Moebius.hpp"
+#include "Render.h"
 
 #include <complex>
 using complex = std::complex<double>;
@@ -20,6 +21,7 @@ class MainForm : public QWidget
 
 	Kleinian K;
 
+	Renderer renderer;
 	QImage previewImage;
 
 	Moebius<complex> Ma, Mb, Mc;
@@ -47,5 +49,5 @@ protected slots:
 	void tableItemSelectionChanged();
 
 	void clearPreview();
-	void setPreview(QImage& image);
+	void renderPreview(double re, double im);
 };
