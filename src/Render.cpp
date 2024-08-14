@@ -25,11 +25,11 @@ void Renderer:: init(const Kleinian& K, const complex& root, const Moebius<compl
 	};
 	Moebius<complex> Mb = {
 		0.0, 1.0,
-		1.0, complex(0, offsetN<real>(K.nV1))
+		1.0, complex(0, offsetN<real>(K.v1))
 	};
 	Moebius<complex> Mc = {
 		0.0, 1.0,
-		1.0, complex(0, -offsetN<real>(K.nV2))
+		1.0, complex(0, -offsetN<real>(K.v2))
 	};
 
 	transforms.emplace_back(Ma);

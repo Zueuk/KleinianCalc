@@ -50,21 +50,21 @@ MainForm::MainForm(QWidget* parent) :
 }
 
 void MainForm::actionUpdateTriggered() {
-	nA = ui.spinBoxA->value();
-	nB = ui.spinBoxB->value();
-	nN = ui.spinBoxN->value();
+	K.a = ui.spinBoxA->value();
+	K.b = ui.spinBoxB->value();
+	K.n = ui.spinBoxN->value();
 
 	// If GCD(a,b) > 1, we can move this multiplier into n
-	int d = std::gcd(nA, nB);
+	int d = std::gcd(K.a, K.b);
 	if (d > 1) {
-		nA /= d;
-		nB /= d;
-		nN *= d;
+		K.a /= d;
+		K.b /= d;
+		K.n *= d;
 	}
 
 	auto updateValueAndUi = [](int* value, QSpinBox* spinBox, QLabel* infLabel, bool infChecked) {
 		if (infChecked) {
-			*value = INT32_MAX;
+			*value = INT_MAX;
 			spinBox->hide();
 			infLabel->show();
 		}
@@ -74,18 +74,18 @@ void MainForm::actionUpdateTriggered() {
 			spinBox->show();
 		}
 	};
-	updateValueAndUi(&nV1, ui.spinBoxV1, ui.labelInfV1, ui.checkBoxInfV1->isChecked());
-	updateValueAndUi(&nV2, ui.spinBoxV2, ui.labelInfV2, ui.checkBoxInfV2->isChecked());
+	updateValueAndUi(&K.v1, ui.spinBoxV1, ui.labelInfV1, ui.checkBoxInfV1->isChecked());
+	updateValueAndUi(&K.v2, ui.spinBoxV2, ui.labelInfV2, ui.checkBoxInfV2->isChecked());
 
 	bool warnB = false;
-	if (nV1 != nV2 && nV1 != 2 && nV2 != 2) {
-		// nB should be even for alternating patterns
-		if (nB % 2 != 0) {
-			// If nB is odd, we can try borrowing a *2 from nN
-			if (nN %2 == 0 && nN > 2) {
-				nA *= 2;
-				nB *= 2;
-				nN /= 2;
+	if (K.v1 != K.v2 && K.v1 > 2 && K.v2 > 2) {
+		// b should be even for alternating patterns
+		if (K.b % 2 != 0) {
+			// If b is odd, we can try borrowing a *2 from n
+			if (K.n > 2 && K.n % 2 == 0) {
+				K.a *= 2;
+				K.b *= 2;
+				K.n /= 2;
 			}
 			else {
 				warnB = true;
@@ -94,15 +94,15 @@ void MainForm::actionUpdateTriggered() {
 	}
 	ui.labelBvalue->setStyleSheet(warnB ? "background-color: red" : "");
 
-	ui.labelAvalue->setNum(nA);
-	ui.labelBvalue->setNum(nB);
-	ui.labelNvalue->setNum(nN);
+	ui.labelAvalue->setNum(K.a);
+	ui.labelBvalue->setNum(K.b);
+	ui.labelNvalue->setNum(K.n);
 
 	// GCD(a,b)*n should be > 1
-	ui.labelNvalue->setStyleSheet(nN > 1 ? "" : "background-color: red");
+	ui.labelNvalue->setStyleSheet(K.n > 1 ? "" : "background-color: red");
 
-	double v1 = offsetN<double>(nV1);
-	double v2 = offsetN<double>(nV2);
+	double v1 = offsetN<double>(K.v1);
+	double v2 = offsetN<double>(K.v2);
 	Mb.d.imag(v1);
 	Mc.d.imag(-v2);
 	QString v1string = QString::number(v1, 'g', 8);
@@ -116,7 +116,7 @@ void MainForm::actionUpdateTriggered() {
 	ui.label_c22->setText("0\n-" + v2string);
 	ui.label_C11->setText("0\n-" + v2string);
 
-	if (nA + nB < 42) {
+	if (K.a + K.b < 42) {
 		// If the polynomial is not too big, solve it right away
 		ui.buttonRecalc->hide();
 		actionRecalculateTriggered();
@@ -131,11 +131,6 @@ void MainForm::actionUpdateTriggered() {
 void MainForm::actionRecalculateTriggered() {
 	// Solving can take some time
 	QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-
-	Kleinian K(
-		nA, nB, nN,
-		nV1, nV2
-	);
 
 	int method = ui.radioBtnMethod0->isChecked() ? 0 : 1;
 	bool findAllRoots = ui.checkBoxFindAllRoots->isChecked();
@@ -252,12 +247,12 @@ void MainForm::valueUbuttonClicked() {
 }
 
 void MainForm::valueV1buttonClicked() {
-	double v1 = offsetN<double>(nV1);
+	double v1 = offsetN<double>(K.v1);
 	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v1)));
 }
 
 void MainForm::valueV2buttonClicked() {
-	double v2 = offsetN<double>(nV2);
+	double v2 = offsetN<double>(K.v2);
 	QApplication::clipboard()->setText(QString::fromStdString(boost::lexical_cast<std::string>(v2)));
 }
 
@@ -283,10 +278,6 @@ void MainForm::tableItemSelectionChanged() {
 
 			Renderer::complex root(re, im);
 			Renderer renderer(renderWidth, renderHeight);
-			Kleinian K(
-				nA, nB, nN,
-				nV1, nV2
-			);
 			static const Moebius<Renderer::complex> views[] = {
 				{ 1, -1, 1, 1 }, // Halfplane to disc
 				{ 0.5, 0, 0, 1 }, // Zoom out

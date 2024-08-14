@@ -4,6 +4,7 @@
 
 #include "ui_MainForm.h"
 
+#include "Kleinian.h"
 #include "Moebius.hpp"
 
 #include <complex>
@@ -17,8 +18,8 @@ class MainForm : public QWidget
 {
 	Q_OBJECT
 
-	int nA, nB, nN;
-	int nV1, nV2;
+	Kleinian K;
+
 	QImage previewImage;
 
 	Moebius<complex> Ma, Mb, Mc;

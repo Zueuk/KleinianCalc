@@ -5,6 +5,7 @@
 #include <complex>
 
 #include "Kleinian.h"
+#include "Moebius.hpp"
 
 #include <QImage>
 

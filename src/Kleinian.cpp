@@ -1,10 +1,11 @@
 #include "Kleinian.h"
 
+#include "Moebius.hpp"
 #include "SkowronGould.hpp"
 
 #include <boost/math/tools/roots.hpp>
 
-std::vector<Kleinian::complex> Kleinian::findRoots_Newton(Kleinian::polynomial& P, complex guess, bool findAllRoots) {
+std::vector<Kleinian::complex> Kleinian::findRoots_Newton(Kleinian::polynomial& P, complex guess, bool findAllRoots) const {
 	std::vector<complex> roots;
 
 	auto minDegree = findAllRoots ? 0 : P.degree() - 1;
@@ -44,7 +45,7 @@ std::vector<Kleinian::complex> Kleinian::findRoots_Newton(Kleinian::polynomial& 
 	return roots;
 }
 
-std::vector<Kleinian::complex> Kleinian::findRoots_SkowronGould(Kleinian::polynomial& P, complex guess, bool findAllRoots) {
+std::vector<Kleinian::complex> Kleinian::findRoots_SkowronGould(Kleinian::polynomial& P, complex guess, bool findAllRoots) const {
 	if (!findAllRoots) {
 		std::vector<complex> roots(1, guess);
 		SkowronGould::solve_one(P, roots[0], true);
@@ -57,19 +58,19 @@ std::vector<Kleinian::complex> Kleinian::findRoots_SkowronGould(Kleinian::polyno
 	}
 }
 
-std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) {
-	complex v1, v2;
-	if (nV1 == 2) {
-		v2 = complex(0, offsetN<real>(nV2));
-		v1 = v2;
+std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) const {
+	complex cv1, cv2;
+	if (v1 == 2) {
+		cv2 = complex(0, offsetN<real>(v2));
+		cv1 = cv2;
 	}
-	else if (nV2 == 2) {
-		v1 = complex(0, offsetN<real>(nV1));
-		v2 = v1;
+	else if (v2 == 2) {
+		cv1 = complex(0, offsetN<real>(v1));
+		cv2 = cv1;
 	}
 	else {
-		v1 = complex(0, offsetN<real>(nV1));
-		v2 = complex(0, offsetN<real>(nV2));
+		cv1 = complex(0, offsetN<real>(v1));
+		cv2 = complex(0, offsetN<real>(v2));
 	}
 
 	using PolyMoebius = Moebius<polynomial>;
@@ -81,11 +82,11 @@ std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) {
 	};
 	// Matrices used for solving differ from the ones used for generation
 	PolyMoebius Mb = Ma * PolyMoebius{
-		{ 1.0 }, { v1 },
+		{ 1.0 }, { cv1 },
 		{ 0.0 }, { 1.0 }
 	};
 	PolyMoebius Mc = Ma * PolyMoebius{
-		{ 1.0 }, { v2 },
+		{ 1.0 }, { cv2 },
 		{ 0.0 }, { 1.0 }
 	};
 
@@ -100,25 +101,25 @@ std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) {
 	};
 
 	// This is basically the line drawing algorithm
-	if (nA >= nB) {
+	if (a >= b) {
 		int x = 0;
-		for (int i = 0; i < nA; ++i) {
+		for (int i = 0; i < a; ++i) {
 			applyA(M);
-			x += nB;
-			if (x >= nA) {
+			x += b;
+			if (x >= a) {
 				applyB(M);
-				x -= nA;
+				x -= a;
 			}
 		}
 	}
 	else {
 		int y = 0;
-		for (int i = 0; i < nB; ++i) {
+		for (int i = 0; i < b; ++i) {
 			applyB(M);
-			y += nA;
-			if (y >= nB) {
+			y += a;
+			if (y >= b) {
 				applyA(M);
-				y -= nB;
+				y -= b;
 			}
 		}
 	}
@@ -131,7 +132,7 @@ std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) {
 	// Since members of M are polynomials, this equation
 	// becomes a polynomial that we're going to solve
 
-	polynomial P = M.a + M.d - offsetN<real>(nN);
+	polynomial P = M.a + M.d - offsetN<real>(n);
 
 	// We are looking for the root closest to (2 + 0i),
 	// a small imaginary value is added to improve root finding
