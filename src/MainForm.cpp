@@ -16,8 +16,6 @@ MainForm::MainForm(QWidget* parent) :
 {
 	ui.setupUi(this);
 
-	connect(ui.actionUpdate, &QAction::triggered, this, &MainForm::actionUpdateTriggered);
-	connect(ui.actionRecalculate, &QAction::triggered, this, &MainForm::actionRecalculateTriggered);
 	ui.splitter->setSizes({400, 920});
 	ui.splitter->setStretchFactor(0, 1);
 

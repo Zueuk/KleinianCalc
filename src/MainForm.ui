@@ -1021,7 +1021,7 @@ http://zueuk.deviantart.com/</string>
   </connection>
   <connection>
    <sender>spinBoxV2</sender>
-   <signal>valueChanged(QString)</signal>
+   <signal>valueChanged(int)</signal>
    <receiver>actionUpdate</receiver>
    <slot>trigger()</slot>
    <hints>
