@@ -7,7 +7,7 @@
 
 const int renderWidth = 920;
 const int renderHeight = 920;
-const int renderIterations = 999000;
+const int renderIterations = 2000000;
 
 MainForm::MainForm(QWidget* parent)
 	: QWidget(parent)
@@ -29,6 +29,7 @@ MainForm::MainForm(QWidget* parent)
 
 	connect(ui.checkBoxFindAllRoots, &QAbstractButton::toggled, this, &MainForm::checkBoxfindAllRootsToggled);
 
+	connect(ui.buttonCopyImage, &QAbstractButton::clicked, this, &MainForm::copyImageButtonClicked);
 	connect(ui.buttonCopyXml, &QAbstractButton::clicked, this, &MainForm::copyXmlButtonClicked);
 
 	ui.tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -163,10 +164,12 @@ void MainForm::actionRecalculateTriggered() {
 
 	if (n != 0) {
 		ui.tableWidget->selectRow(0);
+		ui.buttonCopyImage->setEnabled(true);
 		ui.buttonCopyXml->setEnabled(true);
 	}
 	else {
 		clearPreview();
+		ui.buttonCopyImage->setEnabled(false);
 		ui.buttonCopyXml->setEnabled(false);
 	}
 
@@ -185,6 +188,10 @@ static QString toXformString(const Moebius<complex>& M) {
 		toParamString("C", M.c) +
 		toParamString("D", M.d) +
 		"/>\n";
+}
+
+void MainForm::copyImageButtonClicked() {
+	QApplication::clipboard()->setImage(previewImage);
 }
 
 void MainForm::copyXmlButtonClicked() {

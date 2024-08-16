@@ -40,6 +40,7 @@ protected slots:
 	void valueV1buttonClicked();
 	void valueV2buttonClicked();
 
+	void copyImageButtonClicked();
 	void copyXmlButtonClicked();
 
 	void checkBoxfindAllRootsToggled(bool checked);

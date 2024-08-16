@@ -919,6 +919,16 @@ http://zueuk.deviantart.com/</string>
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="buttonCopyImage">
+           <property name="toolTip">
+            <string>Copy image to clipboard</string>
+           </property>
+           <property name="text">
+            <string>Copy image</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>View as</string>
