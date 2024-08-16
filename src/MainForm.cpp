@@ -139,17 +139,18 @@ void MainForm::actionRecalculateTriggered() {
 	ui.tableWidget->clearSelection();
 	ui.tableWidget->setRowCount(n);
 
-	std::sort(roots.begin(), roots.end(), [](auto a, auto b){ return norm(a) >= norm(b); });
+	std::sort(roots.begin(), roots.end(), [](const auto& a, const auto& b){ return norm(a) > norm(b); });
 
 	for (int i = 0; i < n; ++i) {
-		// Real part must be positive for the pattern to be on the right side
-		if (roots[i].real() < 0)
-			roots[i] = -roots[i];
-		// Very small imaginary value must be just approximation error
-		if (fabs(roots[i].imag()) < 1e-10)
-			roots[i].imag(0);
-
 		auto root = complex(roots[i]);
+
+		// Real part must be positive for the pattern to be on the right side
+		if (root.real() < 0)
+			root.real(-root.real());
+		// Very small imaginary value must be just approximation error
+		if (abs(root.imag()) < FLT_EPSILON)
+			root.imag(0);
+
 		auto itemRe = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.real())));
 		auto itemIm = new QTableWidgetItem(QString::fromStdString(boost::lexical_cast<std::string>(root.imag())));
 		itemRe->setData(Qt::UserRole, root.real());
