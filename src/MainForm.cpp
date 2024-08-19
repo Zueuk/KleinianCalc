@@ -38,6 +38,7 @@ MainForm::MainForm(QWidget* parent)
 	connect(ui.tableWidget, &QTableWidget::cellDoubleClicked, this, &MainForm::tableCellDoubleClicked);
 	connect(ui.tableWidget, &QTableWidget::itemSelectionChanged, this, &MainForm::tableItemSelectionChanged);
 
+	connect(ui.comboBoxCalcMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
 	connect(ui.comboBoxViewMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
 
 	Ma = { 0, 1, -1, 0 };
@@ -192,17 +193,24 @@ void MainForm::copyImageButtonClicked() {
 
 void MainForm::copyXmlButtonClicked() {
 	QString viewScale, viewXform;
-	if (ui.comboBoxViewMode->currentIndex() == 0) {
-		viewScale = "512";
-		viewXform = "<finalxform color=\"0\" symmetry=\"1\" mobius=\"1\" coefs=\"1 0 0 1 0 0\""
-					" Re_A=\"1\" Im_A=\"0\" Re_B=\"-1\" Im_B=\"0\" Re_C=\"1\" Im_C=\"0\" Re_D=\"1\" Im_D=\"0\"/>\n";
-	} else {
-		viewScale = "256";
-		viewXform = "";
+	int calcMode = ui.comboBoxCalcMode->currentIndex();
+	int viewMode = ui.comboBoxViewMode->currentIndex();
+	viewScale = (viewMode == 0) ? "512" : "256";
+	if (viewMode != calcMode) {
+		static const QString views[] = {
+			"Re_A=\"1\" Im_A=\"0\" Re_B=\"-1\" Im_B=\"0\" Re_C=\"1\" Im_C=\"0\" Re_D=\"1\" Im_D=\"0\"",
+			"Re_A=\"1\" Im_A=\"0\" Re_B=\"1\" Im_B=\"0\" Re_C=\"-1\" Im_C=\"0\" Re_D=\"1\" Im_D=\"0\""
+		};
+		viewXform = "<finalxform color=\"0\" symmetry=\"1\" mobius=\"1\" coefs=\"1 0 0 1 0 0\" " +
+					views[viewMode] + "/>\n";
 	}
+	auto nStr = [](int n) { return isInf(n) ? "inf" : QString::number(n); };
+	QString kleinianParams =
+		QString::number(K.a) + " " + QString::number(K.b) + " " +
+		nStr(K.n) + " " + nStr(K.h) + " " + nStr(K.v1) + " " + nStr(K.v2);
 
 	QApplication::clipboard()->setText(
-		"<flame name=\"Kleinian\""
+		"<flame name=\"Kleinian " + kleinianParams + "\""
 		" size=\"1024 1024\" center=\"0 0\" scale=\"" + viewScale + "\""
 		" oversample=\"1\" filter=\"0.5\" quality=\"50\""
 		" background=\"0 0 0\" brightness=\"4\" gamma=\"4\" gamma_threshold=\"0.04\">\n" +
@@ -280,7 +288,8 @@ void MainForm::tableItemSelectionChanged() {
 			double re = itemRe->data(Qt::UserRole).value<double>();
 			double im = itemIm->data(Qt::UserRole).value<double>();
 
-			auto transforms = K.createGenerators(complex(re, im));
+			auto calcMode = qBound(0, ui.comboBoxCalcMode->currentIndex(), 1);
+			auto transforms = K.createGenerators(complex(re, im), calcMode == 0);
 			Ma = transforms[0];
 			Mb = transforms[1];
 			Mc = transforms[2];
@@ -307,21 +316,18 @@ void MainForm::clearPreview() {
 }
 
 void MainForm::renderPreview(double re, double im) {
-	auto transforms = K.createGenerators(Renderer::complex(re, im));
+	auto calcMode = (Renderer::ViewMode)qBound(0, ui.comboBoxCalcMode->currentIndex(), 1);
+	auto transforms = K.createGenerators(Renderer::complex(re, im), calcMode == Renderer::ViewMode::Disc);
 	int n = (int)transforms.size();
 	transforms.reserve(n * 2);
 	for (int i = 0; i < n; ++i) {
 		transforms.push_back(transforms[i].inverse());
 	}
 
-	static const Moebius<Renderer::complex> views[] = {
-		{ 1, -1, 1, 1 }, // Halfplane to disc
-		{ 0.5, 0, 0, 1 }, // Zoom out
-	};
-	int viewIndex = qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
+	auto viewMode = (Renderer::ViewMode)qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
 
 	renderer.clear();
-	renderer.iterate(renderIterations, transforms, views[viewIndex]);
+	renderer.iterate(renderIterations, transforms, calcMode, viewMode);
 	renderer.tonemap(previewImage);
 	ui.labelPreview->setPixmap(QPixmap::fromImage(previewImage));
 }

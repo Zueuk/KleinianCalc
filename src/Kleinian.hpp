@@ -42,7 +42,7 @@ public:
 	std::vector<complex> solve(int method, bool findAllRoots) const;
 
 	template <typename complexT>
-	std::vector<Moebius<complexT>> createGenerators(complexT root) const;
+	std::vector<Moebius<complexT>> createGenerators(complexT root, bool asDisc) const;
 };
 
 template <typename moebiusT>
@@ -126,9 +126,32 @@ public:
 };
 
 template <typename complexT>
-std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root) const {
+std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root, bool asDisc) const {
 	Moebius<complexT> Ma, Mb, Mc;
 	using realT = typename complexT::value_type;
+
+	static const Moebius<complexT> Disc2halfplane = {
+		1, 1,
+		-1, 1
+	};
+	static const Moebius<complexT> Halfplane2disc = {
+		1, -1,
+		1, 1
+	};
+	auto divideBy = [](Moebius<complexT>& M, complexT z) {
+		if (z.real() != 0 || z.imag() != 0)
+			M = { M.a/z, M.b/z, M.c/z, M.d/z };
+	};
+	auto clean = [](Moebius<complexT>& M) {
+		auto cleanValue = [](complexT& z) {
+			if (abs(z.real()) < FLT_EPSILON) z.real(0);
+			if (abs(z.imag()) < FLT_EPSILON) z.imag(0);
+		};
+		cleanValue(M.a);
+		cleanValue(M.b);
+		cleanValue(M.c);
+		cleanValue(M.d);
+	};
 
 	if (isInf(h)) {
 		Ma = {
@@ -143,6 +166,20 @@ std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root) const {
 			0, 1,
 			1, complexT(0, -offsetN<realT>(v2))
 		};
+
+		if (asDisc) {
+			Ma = Halfplane2disc * Ma * Disc2halfplane;
+			Mb = Halfplane2disc * Mb * Disc2halfplane;
+			Mc = Halfplane2disc * Mc * Disc2halfplane;
+
+			divideBy(Ma, Ma.c);
+			divideBy(Mb, Mb.c);
+			divideBy(Mc, Mc.c);
+
+			clean(Ma);
+			clean(Mb);
+			clean(Mc);
+		}
 	}
 	else {
 		TilngParameters<realT> tiling(h, v1, v2);
@@ -182,42 +219,19 @@ std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root) const {
 		else
 			Mc = NormalForm1fp(complexT(0, 1), -0.5*tiling.ph - 0.5/tiling.ph);
 
-		// Convert from disc to halfplane
-		static const Moebius<complexT> Disc2halfplane = {
-			1, 1,
-			-1, 1
-		};
-		static const Moebius<complexT> Halfplane2disc = {
-			1, -1,
-			1, 1
-		};
-		Ma = Disc2halfplane * Ma * Halfplane2disc;
-		Mb = Disc2halfplane * Mb * Halfplane2disc;
-		Mc = Disc2halfplane * Mc * Halfplane2disc;
+		if (!asDisc) {
+			Ma = Disc2halfplane * Ma * Halfplane2disc;
+			Mb = Disc2halfplane * Mb * Halfplane2disc;
+			Mc = Disc2halfplane * Mc * Halfplane2disc;
 
-		// Make matrices look similar to the isInf(h) case
-		auto divideBy = [](Moebius<complexT>& M, complexT z) {
-			if (z.real() != 0 || z.imag() != 0)
-				M = { M.a/z, M.b/z, M.c/z, M.d/z };
-		};
-		divideBy(Ma, -Ma.c);
+			divideBy(Ma, -Ma.c);
+		}
 		divideBy(Mb, Mb.c);
 		divideBy(Mc, Mc.c);
 
-		// Clean near-zero values
-		auto cleanM = [](Moebius<complexT>& M) {
-			auto clean = [](complexT& z) {
-				if (abs(z.real()) < FLT_EPSILON) z.real(0);
-				if (abs(z.imag()) < FLT_EPSILON) z.imag(0);
-			};
-			clean(M.a);
-			clean(M.b);
-			clean(M.c);
-			clean(M.d);
-		};
-		cleanM(Ma);
-		cleanM(Mb);
-		cleanM(Mc);
+		clean(Ma);
+		clean(Mb);
+		clean(Mc);
 	}
 
 	return { Ma, Mb, Mc };

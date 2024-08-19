@@ -27,7 +27,11 @@ public:
 		, histogram(new float[w * h])
 	{ }
 
+	enum class ViewMode { Disc, Halfplane };
+
 	void clear();
-	void iterate(long iters, const std::vector<Moebius<complex>>& transforms, const Moebius<complex>& cameraTransform);
+	void iterate(long iters, const std::vector<Moebius<complex>>& transforms, ViewMode calcMode, ViewMode viewMode);
 	void tonemap(QImage& image);
 };
+
+extern const Moebius<Renderer::complex> viewMatrix[];

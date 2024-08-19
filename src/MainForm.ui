@@ -1006,9 +1006,6 @@ http://zueuk.deviantart.com/</string>
          </item>
          <item>
           <widget class="QComboBox" name="comboBoxCalcMode">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
            <item>
             <property name="text">
              <string>Disc</string>
