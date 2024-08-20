@@ -114,29 +114,14 @@ std::vector<Kleinian::complex> Kleinian::solve(int method, bool findAllRoots) co
 			{ 1.0 },    { pZ, pZ }
 		};
 
-		static const PolyMoebius Disc2halfplane = {
-			{ 1.0 }, { 1.0 },
-			{-1.0 }, { 1.0 }
-		};
-		static const PolyMoebius Halfplane2disc = {
-			{ 1.0 }, {-1.0 },
-			{ 1.0 }, { 1.0 }
-		};
-		auto Rotation = [](real a) {
-			return PolyMoebius {
-				{ exp(complex(0, a)) }, { 0.0 },
-				{ 0.0 }, { 1.0 }
+		auto NormalForm2fp = [](complex fp1, complex fp2, complex k) {
+			return PolyMoebius{
+				{ fp1 - k*fp2 },      { (k - complex(1))*fp1*fp2 },
+				{ (complex(1) - k) }, { (k*fp1 - fp2) }
 			};
 		};
-		auto PoincareShift = [](complex p) {
-			return PolyMoebius {
-				{ 1.0 }, { p },
-				{ conj(p) }, { 1.0 }
-			};
-		};
-
-		Mb = Ma * PoincareShift(tiling.ph) * Rotation(-2*tiling.B1) * PoincareShift(-tiling.ph);
-		Mc = Ma * PoincareShift(tiling.ph) * Rotation(-2*tiling.C1) * PoincareShift(-tiling.ph);
+		Mb = Ma * NormalForm2fp(tiling.ph, 1/tiling.ph, exp(complex(0, -2*tiling.B1)));
+		Mc = Ma * NormalForm2fp(tiling.ph, 1/tiling.ph, exp(complex(0, -2*tiling.C1)));
 	}
 
 	PolyMoebius M = createSolverMatrix(Ma, Mb, Mc);
