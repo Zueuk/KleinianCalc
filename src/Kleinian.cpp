@@ -1,4 +1,4 @@
-#include "Kleinian.h"
+#include "Kleinian.hpp"
 
 #include "Moebius.hpp"
 #include "SkowronGould.hpp"

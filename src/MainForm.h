@@ -4,8 +4,8 @@
 
 #include "ui_MainForm.h"
 
-#include "Kleinian.h"
-#include "Render.h"
+#include "Kleinian.hpp"
+#include "Renderer.h"
 
 #include <complex>
 using complex = std::complex<double>;

@@ -22,15 +22,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
 	Kleinian.cpp \
 	MainForm.cpp \
-	main.cpp \
-	Render.cpp
+	Renderer.cpp \
+	main.cpp
 
 HEADERS += \
-	Kleinian.h \
+	Kleinian.hpp \
 	MainForm.h \
 	Moebius.hpp \
+	Renderer.h \
 	pcg32.h \
-	Render.h \
 	SkowronGould.hpp
 
 FORMS += \
