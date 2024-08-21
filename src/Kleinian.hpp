@@ -126,6 +126,18 @@ public:
 };
 
 template <typename complexT>
+void cleanMatrix(Moebius<complexT>& M) {
+	auto cleanValue = [](complexT& z) {
+		if (abs(z.real()) < FLT_EPSILON) z.real(0);
+		if (abs(z.imag()) < FLT_EPSILON) z.imag(0);
+	};
+	cleanValue(M.a);
+	cleanValue(M.b);
+	cleanValue(M.c);
+	cleanValue(M.d);
+};
+
+template <typename complexT>
 std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root, bool asDisc) const {
 	Moebius<complexT> Ma, Mb, Mc;
 	using realT = typename complexT::value_type;
@@ -137,20 +149,6 @@ std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root, bool as
 	static const Moebius<complexT> Halfplane2disc = {
 		1, -1,
 		1, 1
-	};
-	auto divideBy = [](Moebius<complexT>& M, complexT z) {
-		if (z.real() != 0 || z.imag() != 0)
-			M = { M.a/z, M.b/z, M.c/z, M.d/z };
-	};
-	auto clean = [](Moebius<complexT>& M) {
-		auto cleanValue = [](complexT& z) {
-			if (abs(z.real()) < FLT_EPSILON) z.real(0);
-			if (abs(z.imag()) < FLT_EPSILON) z.imag(0);
-		};
-		cleanValue(M.a);
-		cleanValue(M.b);
-		cleanValue(M.c);
-		cleanValue(M.d);
 	};
 
 	if (isInf(h)) {
@@ -172,13 +170,13 @@ std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root, bool as
 			Mb = Halfplane2disc * Mb * Disc2halfplane;
 			Mc = Halfplane2disc * Mc * Disc2halfplane;
 
-			divideBy(Ma, Ma.c);
-			divideBy(Mb, Mb.c);
-			divideBy(Mc, Mc.c);
+			Ma.divideBy(Ma.c);
+			Mb.divideBy(Mb.c);
+			Mc.divideBy(Mc.c);
 
-			clean(Ma);
-			clean(Mb);
-			clean(Mc);
+			cleanMatrix(Ma);
+			cleanMatrix(Mb);
+			cleanMatrix(Mc);
 		}
 	}
 	else {
@@ -224,14 +222,14 @@ std::vector<Moebius<complexT>> Kleinian::createGenerators(complexT root, bool as
 			Mb = Disc2halfplane * Mb * Halfplane2disc;
 			Mc = Disc2halfplane * Mc * Halfplane2disc;
 
-			divideBy(Ma, -Ma.c);
+			Ma.divideBy(-Ma.c);
 		}
-		divideBy(Mb, Mb.c);
-		divideBy(Mc, Mc.c);
+		Mb.divideBy(Mb.c);
+		Mc.divideBy(Mc.c);
 
-		clean(Ma);
-		clean(Mb);
-		clean(Mc);
+		cleanMatrix(Ma);
+		cleanMatrix(Mb);
+		cleanMatrix(Mc);
 	}
 
 	return { Ma, Mb, Mc };
