@@ -477,6 +477,9 @@ http://zueuk.deviantart.com/</string>
              <property name="title">
               <string>a</string>
              </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
              <layout class="QGridLayout" name="gridLayout_3">
               <item row="0" column="0">
                <widget class="QLabel" name="label_a11">
@@ -492,7 +495,7 @@ http://zueuk.deviantart.com/</string>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="Line" name="line_2">
+               <widget class="Line" name="line_1">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
                 </property>
@@ -512,7 +515,7 @@ http://zueuk.deviantart.com/</string>
                </widget>
               </item>
               <item row="1" column="0" colspan="3">
-               <widget class="Line" name="line_1">
+               <widget class="Line" name="line_2">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -558,6 +561,9 @@ http://zueuk.deviantart.com/</string>
             <widget class="QGroupBox" name="groupBox_A">
              <property name="title">
               <string>A</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
              </property>
              <layout class="QGridLayout" name="gridLayout_4">
               <item row="0" column="0">
@@ -641,6 +647,9 @@ http://zueuk.deviantart.com/</string>
              <property name="title">
               <string>b</string>
              </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
              <layout class="QGridLayout" name="gridLayout_5">
               <item row="0" column="0">
                <widget class="QLabel" name="label_b11">
@@ -722,6 +731,9 @@ http://zueuk.deviantart.com/</string>
             <widget class="QGroupBox" name="groupBox_B">
              <property name="title">
               <string>B</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
              </property>
              <layout class="QGridLayout" name="gridLayout_6">
               <item row="0" column="0">
@@ -805,6 +817,9 @@ http://zueuk.deviantart.com/</string>
              <property name="title">
               <string>c</string>
              </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
              <layout class="QGridLayout" name="gridLayout_7">
               <item row="0" column="0">
                <widget class="QLabel" name="label_c11">
@@ -886,6 +901,9 @@ http://zueuk.deviantart.com/</string>
             <widget class="QGroupBox" name="groupBox_C">
              <property name="title">
               <string>C</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
              </property>
              <layout class="QGridLayout" name="gridLayout_8">
               <item row="0" column="0">

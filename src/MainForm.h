@@ -50,5 +50,5 @@ protected slots:
 	void tableItemSelectionChanged();
 
 	void clearPreview();
-	void renderPreview(double re, double im);
+	void renderPreview();
 };

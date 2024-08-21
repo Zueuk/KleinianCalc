@@ -41,9 +41,12 @@ MainForm::MainForm(QWidget* parent)
 	connect(ui.comboBoxCalcMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
 	connect(ui.comboBoxViewMode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainForm::tableItemSelectionChanged);
 
-	Ma = { 0, 1, -1, 0 };
-	Mb = { 0, 1, 1, 0 };
-	Mc = { 0, 1, 1, 0 };
+	connect(ui.groupBox_a, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_A, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_b, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_B, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_c, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_C, &QGroupBox::toggled, this, &MainForm::renderPreview);
 
 	actionUpdateTriggered();
 }
@@ -210,21 +213,30 @@ void MainForm::copyXmlButtonClicked() {
 		QString::number(K.a) + " " + QString::number(K.b) + " " +
 		nStr(K.n) + " " + nStr(K.h) + " " + nStr(K.v1) + " " + nStr(K.v2);
 
-	QApplication::clipboard()->setText(
+	QString xml =
 		"<flame name=\"Kleinian " + kleinianParams + "\""
 		" size=\"1024 1024\" center=\"0 0\" scale=\"" + viewScale + "\""
 		" oversample=\"1\" filter=\"0.5\" quality=\"50\""
-		" background=\"0 0 0\" brightness=\"4\" gamma=\"4\" gamma_threshold=\"0.04\">\n" +
-			toXformString("a", Ma) +
-			toXformString("A", Ma.inverse()) +
-			toXformString("b", Mb) +
-			toXformString("B", Mb.inverse()) +
-			toXformString("c", Mc) +
-			toXformString("C", Mc.inverse()) +
-			viewXform +
-			"<color index=\"0\" rgb=\"255 255 255\"/>\n"
-		"</flame>"
-	);
+		" background=\"0 0 0\" brightness=\"4\" gamma=\"4\" gamma_threshold=\"0.04\">\n";
+
+	if (ui.groupBox_a->isChecked())
+		xml += toXformString("a", Ma);
+	if (ui.groupBox_A->isChecked())
+		xml += toXformString("A", Ma.inverse());
+	if (ui.groupBox_b->isChecked())
+		xml += toXformString("b", Mb);
+	if (ui.groupBox_B->isChecked())
+		xml += toXformString("B", Mb.inverse());
+	if (ui.groupBox_c->isChecked())
+		xml += toXformString("c", Mc);
+	if (ui.groupBox_C->isChecked())
+		xml += toXformString("C", Mc.inverse());
+
+	xml += viewXform +
+		"<color index=\"0\" rgb=\"255 255 255\"/>\n"
+		"</flame>";
+
+	QApplication::clipboard()->setText(xml);
 }
 
 void MainForm::checkBoxfindAllRootsToggled(bool checked) {
@@ -300,7 +312,7 @@ void MainForm::tableItemSelectionChanged() {
 			displayMatrix(Mb.inverse(), ui.label_B11, ui.label_B12, ui.label_B21, ui.label_B22);
 			displayMatrix(Mc.inverse(), ui.label_C11, ui.label_C12, ui.label_C21, ui.label_C22);
 
-			renderPreview(re, im);
+			renderPreview();
 			return;
 		}
 	}
@@ -314,19 +326,28 @@ void MainForm::clearPreview() {
 	ui.labelPreview->setPixmap(pixmap);
 }
 
-void MainForm::renderPreview(double re, double im) {
-	auto calcMode = (Renderer::ViewMode)qBound(0, ui.comboBoxCalcMode->currentIndex(), 1);
-	auto transforms = K.createGenerators(Renderer::complex(re, im), calcMode == Renderer::ViewMode::Disc);
-	int n = (int)transforms.size();
-	transforms.reserve(n * 2);
-	for (int i = 0; i < n; ++i) {
-		transforms.push_back(transforms[i].inverse());
-	}
+void MainForm::renderPreview() {
+	std::vector<Moebius<Renderer::complex>> transforms;
 
+	if (ui.groupBox_a->isChecked())
+		transforms.push_back(Ma);
+	if (ui.groupBox_A->isChecked())
+		transforms.push_back(Ma.inverse());
+	if (ui.groupBox_b->isChecked())
+		transforms.push_back(Mb);
+	if (ui.groupBox_B->isChecked())
+		transforms.push_back(Mb.inverse());
+	if (ui.groupBox_c->isChecked())
+		transforms.push_back(Mc);
+	if (ui.groupBox_C->isChecked())
+		transforms.push_back(Mc.inverse());
+
+	auto calcMode = (Renderer::ViewMode)qBound(0, ui.comboBoxCalcMode->currentIndex(), 1);
 	auto viewMode = (Renderer::ViewMode)qBound(0, ui.comboBoxViewMode->currentIndex(), 1);
 
 	renderer.clear();
-	renderer.iterate(renderIterations, transforms, calcMode, viewMode);
+	if (!transforms.empty())
+		renderer.iterate(renderIterations, transforms, calcMode, viewMode);
 	renderer.tonemap(previewImage);
 	ui.labelPreview->setPixmap(QPixmap::fromImage(previewImage));
 }

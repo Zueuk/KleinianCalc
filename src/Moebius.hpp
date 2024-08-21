@@ -10,6 +10,9 @@ public:
 
 	Moebius(complexT a, complexT b, complexT c, complexT d) : a(a), b(b), c(c), d(d) { }
 
+	template <typename otherT>
+	Moebius(const Moebius<otherT>& other) : Moebius(complexT(other.a), complexT(other.b), complexT(other.c), complexT(other.d)) { }
+
 	Moebius operator *(const Moebius& other) const {
 		return Moebius{
 			a * other.a + b * other.c,
