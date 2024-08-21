@@ -178,8 +178,9 @@ static QString toParamString(const QString& name, const complex& z) {
 		"Im_" + name + "=\"" + QString::number(z.imag(), 'g', 16) + "\" ";
 }
 
-static QString toXformString(const Moebius<complex>& M) {
-	return "<xform weight=\"1\" color=\"0\" mobius=\"1\" coefs=\"1 0 0 1 0 0\" " +
+static QString toXformString(const QString& name, const Moebius<complex>& M) {
+	return "<xform name=\"" + name + "\" "
+		"weight=\"1\" color=\"0\" mobius=\"1\" coefs=\"1 0 0 1 0 0\" " +
 		toParamString("A", M.a) +
 		toParamString("B", M.b) +
 		toParamString("C", M.c) +
@@ -214,16 +215,14 @@ void MainForm::copyXmlButtonClicked() {
 		" size=\"1024 1024\" center=\"0 0\" scale=\"" + viewScale + "\""
 		" oversample=\"1\" filter=\"0.5\" quality=\"50\""
 		" background=\"0 0 0\" brightness=\"4\" gamma=\"4\" gamma_threshold=\"0.04\">\n" +
-			toXformString(Ma) +
-			toXformString(Ma.inverse()) +
-			toXformString(Mb) +
-			toXformString(Mb.inverse()) +
-			toXformString(Mc) +
-			toXformString(Mc.inverse()) +
+			toXformString("a", Ma) +
+			toXformString("A", Ma.inverse()) +
+			toXformString("b", Mb) +
+			toXformString("B", Mb.inverse()) +
+			toXformString("c", Mc) +
+			toXformString("C", Mc.inverse()) +
 			viewXform +
-			"<palette count=\"1\" format=\"RGB\">"
-				"FFFFFF"
-			"</palette>\n"
+			"<color index=\"0\" rgb=\"255 255 255\"/>\n"
 		"</flame>"
 	);
 }
