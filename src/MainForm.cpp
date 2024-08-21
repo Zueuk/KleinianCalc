@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QRegExpValidator>
 
 #include <boost/lexical_cast.hpp>
 
@@ -47,8 +48,48 @@ MainForm::MainForm(QWidget* parent)
 	connect(ui.groupBox_B, &QGroupBox::toggled, this, &MainForm::renderPreview);
 	connect(ui.groupBox_c, &QGroupBox::toggled, this, &MainForm::renderPreview);
 	connect(ui.groupBox_C, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_x, &QGroupBox::toggled, this, &MainForm::renderPreview);
+	connect(ui.groupBox_X, &QGroupBox::toggled, this, &MainForm::renderPreview);
+
+	auto abcValidator = new QRegExpValidator(QRegExp("[abcABC]*"), this);
+	ui.lineEditSeq1->setValidator(abcValidator);
+	ui.lineEditSeq2->setValidator(abcValidator);
+	connect(ui.lineEditSeq1, &QLineEdit::textEdited, this, &MainForm::lineEditSeq1Edited);
+	connect(ui.lineEditSeq2, &QLineEdit::textEdited, this, &MainForm::lineEditSeq2Edited);
 
 	actionUpdateTriggered();
+}
+
+Moebius<complex> MainForm::sequenceMatrix(const std::string& sequence) {
+	Moebius<complex> M;
+	for (char ch : sequence) {
+		switch (ch) {
+			case 'a':
+				M = M * Ma;
+				break;
+			case 'b':
+				M = M * Mb;
+				break;
+			case 'c':
+				M = M * Mc;
+				break;
+			case 'A':
+				M = M * Ma.inverse();
+				break;
+			case 'B':
+				M = M * Mb.inverse();
+				break;
+			case 'C':
+				M = M * Mc.inverse();
+				break;
+		}
+	}
+	if (abs(M.c) >= FLT_EPSILON)
+		M.divideBy(M.c);
+	else
+		M.divideBy(M.a);
+	cleanMatrix(M);
+	return M;
 }
 
 void MainForm::actionUpdateTriggered() {
@@ -118,6 +159,11 @@ void MainForm::actionUpdateTriggered() {
 	ui.valueHbutton->setText(QString::number(offsetH, 'g', 8));
 	ui.valueV1button->setText(QString::number(offsetV1, 'g', 8));
 	ui.valueV2button->setText(QString::number(offsetV2, 'g', 8));
+
+	int na = (K.b > 0) ? K.a / K.b : K.a;
+	QString seq = QString(na + 1, 'a');
+	ui.lineEditSeq1->setText(seq);
+	ui.lineEditSeq2->setText(seq.toUpper());
 
 	if (K.a + K.b < 42) {
 		// If the polynomial is not too big, solve it right away
@@ -231,6 +277,10 @@ void MainForm::copyXmlButtonClicked() {
 		xml += toXformString("c", Mc);
 	if (ui.groupBox_C->isChecked())
 		xml += toXformString("C", Mc.inverse());
+	if (ui.groupBox_x->isChecked())
+		xml += toXformString(ui.lineEditSeq1->text(), Mseq1);
+	if (ui.groupBox_X->isChecked())
+		xml += toXformString(ui.lineEditSeq2->text(), Mseq2);
 
 	xml += viewXform +
 		"<color index=\"0\" rgb=\"255 255 255\"/>\n"
@@ -312,12 +362,35 @@ void MainForm::tableItemSelectionChanged() {
 			displayMatrix(Mb.inverse(), ui.label_B11, ui.label_B12, ui.label_B21, ui.label_B22);
 			displayMatrix(Mc.inverse(), ui.label_C11, ui.label_C12, ui.label_C21, ui.label_C22);
 
+			updateMseq1(ui.lineEditSeq1->text());
+			updateMseq2(ui.lineEditSeq2->text());
+
 			renderPreview();
 			return;
 		}
 	}
 
 	clearPreview();
+}
+
+void MainForm::updateMseq1(const QString& str) {
+	Mseq1 = sequenceMatrix(str.toStdString());
+	displayMatrix(Mseq1, ui.label_x11, ui.label_x12, ui.label_x21, ui.label_x22);
+}
+
+void MainForm::updateMseq2(const QString& str) {
+	Mseq2 = sequenceMatrix(str.toStdString());
+	displayMatrix(Mseq2, ui.label_X11, ui.label_X12, ui.label_X21, ui.label_X22);
+}
+
+void MainForm::lineEditSeq1Edited(const QString& str) {
+	updateMseq1(str);
+	renderPreview();
+}
+
+void MainForm::lineEditSeq2Edited(const QString& str) {
+	updateMseq2(str);
+	renderPreview();
 }
 
 void MainForm::clearPreview() {
@@ -341,6 +414,10 @@ void MainForm::renderPreview() {
 		transforms.push_back(Mc);
 	if (ui.groupBox_C->isChecked())
 		transforms.push_back(Mc.inverse());
+	if (ui.groupBox_x->isChecked())
+		transforms.push_back(Mseq1);
+	if (ui.groupBox_X->isChecked())
+		transforms.push_back(Mseq2);
 
 	auto calcMode = (Renderer::ViewMode)qBound(0, ui.comboBoxCalcMode->currentIndex(), 1);
 	auto viewMode = (Renderer::ViewMode)qBound(0, ui.comboBoxViewMode->currentIndex(), 1);

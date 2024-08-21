@@ -23,8 +23,10 @@ class MainForm : public QWidget
 	Renderer renderer;
 	QImage previewImage;
 
-	Moebius<complex> Ma, Mb, Mc;
+	Moebius<complex> Ma, Mb, Mc, Mseq1, Mseq2;
 	double offsetH, offsetV1, offsetV2;
+
+	Moebius<complex> sequenceMatrix(const std::string& sequence);
 
 public:
 	explicit MainForm(QWidget* parent = nullptr);
@@ -48,6 +50,11 @@ protected slots:
 	void tableRowDoubleClicked(int index);
 	void tableCellDoubleClicked(int row, int column);
 	void tableItemSelectionChanged();
+
+	void updateMseq1(const QString& str);
+	void updateMseq2(const QString& str);
+	void lineEditSeq1Edited(const QString& str);
+	void lineEditSeq2Edited(const QString& str);
 
 	void clearPreview();
 	void renderPreview();
